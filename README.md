@@ -1,7 +1,7 @@
 # Heterogeneous Green Premiums and Flat Penalties: Evidence from London
 
 **Author:** Yuxuan (Matt) Ma, University College London · matt.ma.24@ucl.ac.uk
-**Paper:** [`paper/Green_Premiums_Flat_Penalties_London.pdf`](paper/Green_Premiums_Flat_Penalties_London.pdf)
+**Paper:** [`Here`](github.com/Matt-Ma06/Heterogeneity_london_housing_mkt/blob/main/essay.pdf)
 
 ---
 
