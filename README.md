@@ -1,220 +1,181 @@
 # Heterogeneous Green Premiums and Flat Penalties: Evidence from London
-Author: Ma Yuxuan (Matt)\
-Email: matt.ma.24@ucl.ac.uk\
-Paper Link: Available in this repo as Paper_Draft.pdf
+
+**Author:** Yuxuan (Matt) Ma, University College London · matt.ma.24@ucl.ac.uk
+**Paper:** [`paper/Green_Premiums_Flat_Penalties_London.pdf`](paper/Green_Premiums_Flat_Penalties_London.pdf)
 
 ---
 
-## 📌 Project Overview
-This repository contains the replication code, data, and paper for my research project. 
-This study analyses how micro-level housing characteristics (Energy Performance Certificates (EPC) and property types) structurally reprice under severe macroeconomic shocks (interest rate hikes and energy crises after 2022), using Greater London's housing market.
+## Overview
 
-By constructing a spatial **Payment-to-Income (PTI) Filter** framework and implementing a **Post-Double-Selection LASSO (PDS-LASSO)** machine learning algorithm following Belloni (2014) et al., we uncover how regional credit constraints (Housing Affordability Ratio, HAR) distort micro-level asset valuation and green capitalisation.
+This repository contains the data, code and paper for an independent research project on the London housing market between 2017 and 2024, a period that includes the 2022 energy price surge and the rise in Bank Rate from 0.25% to 5.25%.
+
+The project asks how the price associations of two property characteristics, energy efficiency (EPC bands A–C) and property type (flat vs. house), changed over this period, and whether these changes differ between areas with high and low Housing Affordability Ratios (HAR), used here as a proxy for credit constraints.
+
+Controls are selected from a high-dimensional set of energy, deprivation and transport-access features using post-double-selection LASSO (Belloni, Chernozhukov and Hansen, 2014), followed by OLS. The estimates are **conditional associations, not causal effects**; see [Limitations](#limitations).
 
 ---
 
-## 📂 Repository Structure
+## Repository Structure
 
 ```text
-├── DATA_ANALYSIS  # open this folder for analysis after data cleaning
-│  ├── 📜data_analysis.py
-│  ├── 📜final_17_london_data.csv
-│  ├── 📜final_24_london_data.csv
-│  ├── 📜final_london_data.csv
-│  ├── 📜lsoa_lad_converter.csv
-│  ├── 📜postcode_lookup_2602.csv
-│  ├── 📜table1_log_diff.html
-│  ├── 📜table2_cs_lasso.html
-│  └── 📜table3_cs_standardized.html
-├── RAW_DATA_AND_CLEANING  # open this folder when try to clean raw data
-│  ├── 📜data_cleaning.py  # main file for data cleaning
-│  ├── 📜iod15.csv
-│  ├── 📜iod19.csv
-│  ├── 📜iod25.csv
-│  ├── 📜LA_annual_pay_2024.xlsx
-│  ├── 📜la_ukpay_17.xlsx
-│  ├── 📜la_ukpay_24.xlsx
-│  ├── 📜lsoa11_21_lookup.csv
-│  ├── 📜lsoa_har_17.csv
-│  ├── 📜lsoa_har_24.csv
-│  ├── 📜lsoa_medppd_17.csv
-│  ├── 📜lsoa_medppd_24.csv
-│  ├── 📜missing_ppd_17.csv
-│  ├── 📜missing_ppd_24.csv
-│  ├── 📜msoa_income_2018.xls
-│  ├── 📜msoa_income_2023.xlsx
-│  ├── 📜postcode_lookup_2602.csv
-│  ├── 📜pp-2017-part1.csv
-│  ├── 📜pp-2017-part2.csv
-│  ├── 📜pp-2017.csv
-│  ├── 📜pp-2024.csv
-│  ├── 📜ptal2015.csv
-│  ├── 📜ptal2023.csv
-│  ├── 📜rawepc_17.csv
-│  └── 📜rawepc_24.csv
-├── README.md
+├── paper/
+│   └── Green_Premiums_Flat_Penalties_London.pdf
+├── RAW_DATA_AND_CLEANING/          # Stage 1: raw data and cleaning
+│   ├── data_cleaning.py
+│   ├── iod15.csv, iod19.csv, iod25.csv
+│   ├── LA_annual_pay_2024.xlsx, la_ukpay_17.xlsx, la_ukpay_24.xlsx
+│   ├── lsoa11_21_lookup.csv
+│   ├── lsoa_har_17.csv, lsoa_har_24.csv
+│   ├── lsoa_medppd_17.csv, lsoa_medppd_24.csv
+│   ├── missing_ppd_17.csv, missing_ppd_24.csv
+│   ├── msoa_income_2018.xls, msoa_income_2023.xlsx
+│   ├── postcode_lookup_2602.csv
+│   ├── pp-2017-part1.csv, pp-2017-part2.csv, pp-2017.csv, pp-2024.csv
+│   ├── ptal2015.csv, ptal2023.csv
+│   └── rawepc_17.csv, rawepc_24.csv
+├── DATA_ANALYSIS/                  # Stage 2: estimation
+│   ├── data_analysis.py
+│   ├── final_london_data.csv, final_17_london_data.csv, final_24_london_data.csv
+│   ├── lsoa_lad_converter.csv, postcode_lookup_2602.csv
+│   └── table1_log_diff.html, table2_cs_lasso.html, table3_cs_standardized.html
+├── requirements.txt
+└── README.md
 ```
 
----
-## Data Description
-This project utilises a highly granular spatial panel dataset covering Greater London at the **2021 Lower Layer Super Output Area (LSOA)** level (comprising 4,994 LSOAs, with ~4,987 and ~4,986 valid LSOAs retained for 2017 and 2024 respectively, after excluding City of London, which had no recorded transactions). The raw and processed data files are harmonised from multiple UK government and administrative databases.
+The cleaned datasets and output tables in `DATA_ANALYSIS/` are included so that Stage 2 can be run without Stage 1. Running Stage 1 regenerates the three `final_*.csv` files in `DATA_ANALYSIS/` and overwrites them.
 
-All datasets are stored in the `RAW_DATA_AND_CLEANING/` directory and are categorised into the following six modules based on their econometric functions:
-### 1. House Prices & Transactions (Dependent Variable)
-* **Source:** HM Land Registry – *Price Paid Data (PPD)*
-* **Files:**
-    * `pp-2017.csv`, `pp-2017-part1.csv`, `pp-2017-part2.csv`, `pp-2024.csv`: Raw micro-level housing transaction records for 2017 and 2024. Note that HMLR only allows separate downloads of PPD data 2017 in two parts, as specified by file names. `pp-2017.csv` is created using `pd.concat` on the two separate 2017 files.
-    * `lsoa_medppd_17.csv`, `lsoa_medppd_24.csv`: Processed median property prices aggregated to the LSOA level.
-    * `missing_ppd_17.csv`, `missing_ppd_24.csv`: Lists of LSOAs excluded from the panel due to zero recorded property transactions in the respective years.
-
-### 2. Incomes & Credit Constraints (HAR)
-* **Source:** Office for National Statistics (ONS) – *Income estimates for small areas, England and Wales* & *Earnings and hours worked, place of residence by local authority: ASHE Table 8*
-* **Files:**
-    * `msoa_income_2018.xls`, `msoa_income_2023.xlsx`: ONS Middle Layer Super Output Area (MSOA) income estimates for FYE 2018 (used as the 2017 baseline) and FYE 2023.
-    * `la_ukpay_17.xlsx`, `la_ukpay_24.xlsx`, `LA_annual_pay_2024.xlsx`: Local Authority (borough) level wage growth rates, utilised to project final 2024 incomes ($Y_{24} = Y_{23} \times (1 + \text{growth})$).
-    * `lsoa_har_17.csv`, `lsoa_har_24.csv`: The calculated **Housing Affordability Ratio (HAR)** ($HAR = \text{House Price} / \text{Annual Income}$), which acts as the core spatial proxy for credit constraints.
-
-### 3. Energy Performance & Property Attributes
-* **Source:** Ministry of Housing, Communities and Local Government (MHCLG) – *Energy Performance of Buildings Data England and Wales*
-* **Files:**
-    * `rawepc_17.csv`, `rawepc_24.csv`: Raw Energy Performance Certificate (EPC) records.
-* **Variables Extracted:** Property type (Flat vs. House) and energy efficiency ratings (EPC A/B/C vs. D-G). *Note: The 2017 baseline physical characteristics are deliberately utilised to rule out reverse causality, capturing initial structural vulnerabilities before the exogenous macroeconomic shocks.*
-
-### 4. Socio-Economic Controls (Indices of Deprivation)
-* **Source:** Ministry of Housing, Communities and Local Government (MHCLG) – *English indices of deprivation (2015, 2019, 2025)*
-* **Files:**
-    * `iod15.csv`, `iod19.csv`, `iod25.csv`: Indices of Multiple Deprivation (IMD) datasets.
-* **Variables Extracted:** Domain scores including Crime, Education, Health, Income, and Employment. These serve as the high-dimensional control feature space for the Post-LASSO machine learning algorithm.
-
-### 5. Public Transport Accessibility
-* **Source:** Transport for London (TfL) – *TfL GIS Open Data Hub*
-* **Files:**
-    * `ptal2015.csv`, `ptal2023.csv`: Public Transport Accessibility Level (PTAL) scores.
-* **Variables Extracted:** Mean PTAL and intra-LSOA PTAI gaps, strategically included to capture micro-spatial inequalities and neighbourhood gentrification effects masked by macro averages.
-
-### 6. Spatial Lookups & Geography
-* **Source:** ONS Open Geography Portal
-* **Files:**
-    * `postcode_lookup_2602.csv`: Postcode to LSOA mapping directory, essential for accurately geocoding scattered transaction and EPC records into spatial grids.
-    * `lsoa11_21_lookup.csv`: Conversion lookup table between 2011 and 2021 LSOA boundaries to ensure strict spatial polygon consistency across the studied timeframe.
- 
 ---
 
-## 🛠 Prerequisites & Dependencies (Data Cleaning Pipeline)
+## Data
 
-The initial data cleaning, preprocessing, and spatial harmonisation pipeline (`data_cleaning.py`) is built entirely in **Pure Python**. 
+The unit of observation is the **2021 Lower Layer Super Output Area (LSOA)** in Greater London (4,994 LSOAs, of which 4,987 have at least one recorded transaction in 2017 and 4,986 in 2024). All sources are public UK government or administrative data, harmonised to 2021 LSOA boundaries.
 
-It is highly recommended to set up a virtual environment (e.g., using `conda` or `venv`) before running the script. You can install all necessary dependencies via the provided `requirements.txt`:
+| Module | Source | Files | Use |
+| :--- | :--- | :--- | :--- |
+| House prices | HM Land Registry, *Price Paid Data* | `pp-*.csv`, `lsoa_medppd_*.csv`, `missing_ppd_*.csv` | LSOA median prices (dependent variable), from all recorded transactions (Category A and B). The 2017 data are downloaded in two parts and concatenated. `missing_ppd_*.csv` lists records without a postcode, which cannot be assigned to an LSOA. |
+| Income and HAR | ONS, *Income estimates for small areas*; ONS, *ASHE Table 8* | `la_ukpay_17.xlsx`, `msoa_income_2023.xlsx`, `la_ukpay_24.xlsx`, `lsoa_har_24.csv` | Income is MSOA net equivalised household income before housing costs: FYE 2018 for 2017 (`la_ukpay_17.xlsx`, despite its name) and FYE 2023 for 2024, projected one year with the borough's ASHE 2024 annual pay growth, $Y_{24} = Y_{23}(1+g)$. HAR = LSOA median price / MSOA income. |
+| Energy performance and property type | MHCLG, *Energy Performance of Buildings Data* | `rawepc_*.csv` | Certificates lodged in each year, averaged by LSOA. `is_flat` and `is_abc` are therefore **shares** of certificates for flats/maisonettes and for bands A–C, not property-level dummies. |
+| Deprivation | MHCLG, *English Indices of Deprivation* (2015, 2019, 2025) | `iod*.csv` | Seven IMD domain scores, part of the candidate control set. |
+| Transport access | TfL, *GIS Open Data Hub* | `ptal*.csv` | Mean PTAL and intra-LSOA PTAI gaps, part of the candidate control set. |
+| Geography | ONS, *Open Geography Portal* | `postcode_lookup_2602.csv`, `lsoa11_21_lookup.csv` | Postcode-to-LSOA mapping and 2011-to-2021 LSOA conversion. |
 
-```bash
-pip install -r requirements.txt
-```
+**Samples.** Each cross-sectional model uses all LSOAs with complete data in that year (4,803 in 2017; 4,536 in 2024). The log-difference model requires complete data in both years and at least five recorded sales in each year, leaving 4,358 LSOAs (87.26% of London).
+
+**Borough coverage.** ASHE 2024 does not publish annual pay growth for the City of London, Harrow or Richmond upon Thames. For the City, Inner London growth is used instead. For Harrow and Richmond no growth rate is imputed, so 2024 income and HAR are missing and their LSOAs are excluded from the 2024 cross-section and the log-difference model.
+
+**Unused files.** `msoa_income_2018.xls` and `LA_annual_pay_2024.xlsx` are kept for reference but are not read by the code.
+
+**Design choice.** The High-HAR indicator (`is_hhar`) is defined by 2017 HAR above the median and is held fixed in both years. This avoids a mechanical link between 2024 prices and the 2024 classification, but does not remove other sources of confounding. The median is computed within each estimation sample, so the threshold differs slightly between the log-difference and cross-sectional models.
+
 ---
 
-## 🛠 Prerequisites & Dependencies (Data Analysis Pipeline)
+## Method
 
-The econometric modelling, machine learning feature selection, and statistical output generation are executed entirely in **Pure Python** (`data_analysis.py`). 
+1. **Control selection.** Post-double-selection LASSO, run separately within the High-HAR and Low-HAR subsamples. In each subsample, a LASSO regresses the outcome on the standardised candidate controls (`LassoCV`), and L1-penalised logistic regressions do the same for each variable of interest, `is_flat` and `is_abc` (`LogisticRegressionCV`). Penalties are chosen by 5-fold cross-validation. The union of controls selected in either subsample is retained. Because `is_flat` and `is_abc` are shares, they are converted to integers before the logistic step, which in practice flags LSOAs where the share equals one (see Limitations).
+2. **Estimation.** OLS on the variables of interest, their interactions with `is_hhar`, and the selected controls:
+   - a **log-difference model** of 2017–2024 median price growth;
+   - **cross-sectional models** for 2017 and 2024, using the same control set selected from the full-sample model so that the controls are held fixed across years.
 
-It is highly recommended to set up a virtual environment (e.g., using `conda` or `venv`) before running the script. You can install all necessary dependencies via the provided `requirements.txt`:
+Controls are standardised only for selection; the OLS models use the original units. Standard errors are clustered by local authority district (LAD).
+
+---
+
+## Replication
+
+**Requirements:** Python 3.x and the packages in `requirements.txt` (`pandas`, `numpy`, `scikit-learn`, `statsmodels`, `stargazer`, `openpyxl`, `xlrd`). A virtual environment is recommended.
+<!-- CHECK: fill in the exact Python version used. -->
 
 ```bash
 pip install -r requirements.txt
 ```
 
-### Core Python Libraries Utilised:
-* **`pandas`** & **`numpy`**: Utilised for extensive data manipulation, handling infinity/missing values, and executing logarithmic transformations prior to modelling.
-* **`scikit-learn`**: Specifically utilised for the standardisation of variables (`StandardScaler`) and implementing the Post-Double-Selection LASSO framework using cross-validated penalty models (`LassoCV`, `LogisticRegressionCV`) to isolate high-dimensional controls.
-* **`statsmodels`**: Essential for conducting Ordinary Least Squares (OLS) regressions via the formula API, performing Wald tests, and computing clustered robust standard errors (`cov_type='cluster'`).
-* **`stargazer`**: Employed to render and export publication-quality, standardised regression tables directly into HTML format (`table1_log_diff.html`, `table2_cs_lasso.html`, `table3_cs_standardized.html`).
-* **`os`** & **`warnings`**: Standard Python libraries utilised for directory path configuration and suppressing deprecation warnings during the machine learning iterations.
-* **`openpyxl & xlrd`**: Essential engines required by pandas to read unformatted ONS administrative income data provided in both `.xlsx` and `.xls` spreadsheet formats.
-
----
-
-## 🚀 Replication Steps
-
-To ensure strict reproducibility, the empirical pipeline is separated into two sequential stages. Please execute the scripts in the exact order specified below.
-
-*Note: Ensure your terminal/command prompt is directed to the root directory of this repository and the virtual environment (with all dependencies from `requirements.txt` installed) is activated.*
-
-### Step 1: Data Cleaning & Preprocessing
-This script cleans the raw administrative datasets (HM Land Registry, EPC, ONS Income, IMD, PTAL), computes the spatial Payment-to-Income (PTI) proxies (HAR), filters invalid LSOAs, and calculates the baseline logarithmic differences.
+Run from the repository root:
 
 ```bash
-python data_cleaning.py
+# Stage 1: clean raw data, compute HAR, harmonise boundaries
+python RAW_DATA_AND_CLEANING/data_cleaning.py
+
+# Stage 2: double-selection LASSO and OLS; prints summaries and Wald tests
+python DATA_ANALYSIS/data_analysis.py
 ```
-* **Expected Output:** The script will automatically create an analysis directory and export three cleaned, LSOA-level spatial panel datasets ready for econometric modelling:
-  * `final_london_data.csv` (Full log-difference panel)
-  * `final_17_london_data.csv` (2017 baseline cross-section)
-  * `final_24_london_data.csv` (2024 shock cross-section)
 
-### Step 2: Post-LASSO Feature Selection & Econometric Modelling
-Once the cleaned datasets are generated, this script executes the Post-Double-Selection LASSO machine learning algorithm (utilising 5-fold cross-validation) to isolate unbiased controls from the high-dimensional feature space. It then runs the ultimate Ordinary Least Squares (OLS) regressions (Cross-Sectional and Log-Difference) with clustered robust standard errors.
-
-```bash
-python data_analysis.py
-```
-* **Expected Output:** The console will print the regression summaries and Wald test results. Furthermore, the script will render and export three publication-quality regression tables directly into your directory:
-  * `table1_log_diff.html` (Dynamic growth deficits)
-  * `table2_cs_lasso.html` (Cross-Sectional models utilising within-year LASSO controls)
-  * `table3_cs_standardized.html` (Cross-Sectional models utilising the standardised full-sample feature set)
- 
----
-## Empirical Results
-
-### Cross-Sectional Models
-
-**Table 1: Cross-Sectional OLS Regression Models: Standardised Feature Set**
-
-| Feature | (1) 2017 Model | (2) 2024 Model |
+| Output file | Content | Table below |
 | :--- | :--- | :--- |
-| **Intercept** | 11.600*** (0.116) | 12.340*** (0.173) |
-| **is_abc** | 0.085* (0.050) | 0.306*** (0.053) |
-| **is_abc:is_hhar** | 0.130** (0.066) | -0.105 (0.073) |
-| **is_flat** | -0.108** (0.045) | -0.159*** (0.043) |
-| **is_flat:is_hhar** | 0.258*** (0.056) | 0.227*** (0.069) |
-| **is_hhar** | 0.226*** (0.027) | 0.146*** (0.036) |
-| **Selected Controls** | | |
-| **Crime Index** | -0.009 | -0.065*** |
-| **Employment Index** | 1.007*** | 0.396 |
-| **Environment Index** | 0.003*** | 0.005*** |
-| **Income (Log)** | 0.000*** | 0.000*** |
-| **Number of Rooms** | 0.092*** | 0.152*** |
-| **Observations** | 4,803 | 4,536 |
-| $R^{2}$ | 0.717 | 0.629 |
-
-*Note: \* p<0.1; \*\* p<0.05; \*\*\* p<0.01. Clustered SE by LAD in parentheses.*
+| `table3_cs_standardized.html` | Cross-sectional models, common control set from the full-sample selection | Table 1 |
+| `table1_log_diff.html` | Log-difference model | Table 2 |
+| `table2_cs_lasso.html` | Cross-sectional models with within-year LASSO controls (robustness check, not reported in the paper) | — |
 
 ---
 
-### Dynamic Model
+## Results
 
-**Table 2: Post-LASSO Log Difference Model (Full Sample)**
+**Table 1. Cross-sectional OLS with the common control set**
 
-| Variable | Log Difference Model |
+| Variable | (1) 2017 | (2) 2024 |
+| :--- | :--- | :--- |
+| Intercept | 11.600*** (0.116) | 12.340*** (0.173) |
+| is_abc | 0.085* (0.050) | 0.306*** (0.053) |
+| is_abc × is_hhar | 0.130** (0.066) | −0.105 (0.073) |
+| is_flat | −0.108** (0.045) | −0.159*** (0.043) |
+| is_flat × is_hhar | 0.258*** (0.056) | 0.227*** (0.069) |
+| is_hhar | 0.226*** (0.027) | 0.146*** (0.036) |
+| *Selected controls* | | |
+| Crime index | −0.009 | −0.065*** |
+| Employment index | 1.007*** | 0.396 |
+| Environment index | 0.003*** | 0.005*** |
+| Income (£) | 0.000*** | 0.000*** |
+| Number of rooms | 0.092*** | 0.152*** |
+| Observations | 4,803 | 4,536 |
+| R² | 0.717 | 0.629 |
+
+*\* p<0.1; \*\* p<0.05; \*\*\* p<0.01. Standard errors clustered by LAD in parentheses. Income enters in pounds, so its coefficient rounds to 0.000; the 2024 value is projected from FYE 2023 using borough wage growth.*
+
+**Table 2. Log-difference model, 2017–2024**
+
+| Variable | Coefficient |
 | :--- | :--- |
-| **Intercept** | 0.080 (0.122) |
-| **is_abc** | 0.100*** (0.036) |
-| **is_abc:is_hhar** | -0.122*** (0.041) |
-| **is_flat** | -0.071*** (0.027) |
-| **is_flat:is_hhar** | -0.015 (0.029) |
-| **is_hhar** | -0.092*** (0.019) |
-| **Control Variables** | Included (20+ features) |
-| **Observations** | 4,358 |
-| $R^{2}$ | 0.127 |
-| **Adjusted $R^{2}$** | 0.123 |
-| **F Statistic** | 41.887*** |
+| Intercept | 0.080 (0.122) |
+| is_abc | 0.100*** (0.036) |
+| is_abc × is_hhar | −0.122*** (0.041) |
+| is_flat | −0.071*** (0.027) |
+| is_flat × is_hhar | −0.015 (0.029) |
+| is_hhar | −0.092*** (0.019) |
+| Selected controls | 20+ features |
+| Observations | 4,358 |
+| R² / Adjusted R² | 0.127 / 0.123 |
+| F statistic | 41.887*** |
 
-*Note: \* p<0.1; \*\* p<0.05; \*\*\* p<0.01. Clustered SE by LAD in parentheses.*
+*\* p<0.1; \*\* p<0.05; \*\*\* p<0.01. Standard errors clustered by LAD in parentheses.*
 
 ---
 
-## Main Conclusions & Implications
+## Main Findings
 
-Based on the empirical modeling of London's property market across the 2017 baseline and the 2024 shock period, this study outlines several critical market transitions driven by macroeconomic volatility:
+All findings are conditional associations; the mechanisms are interpretations consistent with the estimates, not tested causal channels. Because `is_flat` and `is_abc` are LSOA-level shares, each percentage below compares an LSOA where all EPC-registered dwellings are flats (or rated A–C) with one where none are.
 
-* **Paradigm Shift from Quality to Affordability:** The underlying pricing logic within the housing market has fundamentally shifted. Facing the dual-shock of severe energy cost inflation and rapid interest rate hikes, market constraints have increasingly subordinated property quality to strict affordability thresholds. 
-* **Structural Repricing of Energy Efficiency (Green Premiums):** Following energy price surges, there was a pronounced market correction regarding the value of energy efficiency. The cross-sectional premium for energy-efficient (`is_abc`) properties surged from a marginally significant 0.085 in 2017 to a highly significant 0.306 in 2024, correcting widespread undervaluation from the preceding era of cheap credit. 
-* **Credit Frictions Exacerbate Inequality:** The benefits of energy efficiency are deeply heterogeneous and gated by credit constraints. In Low-HAR areas, buyers leverage budgetary slack to push green premiums up, realizing future energy savings. Conversely, in High-HAR areas, escalating rates push marginal buyers against their Payment-to-Income (PTI) limits. This financial exclusion results in a relative growth penalty for green assets dynamically, effectively trapping credit-constrained households in depreciating, inefficient homes.
-* **The Flat Penalty and Market Down-Laddering:** While flats generally experienced a dynamic pricing discount compared to houses, a structural "price-floor" protected flats in High-HAR (credit-constrained) areas. Because properties higher on the housing ladder breach rigid PTI limits, marginalised first-time buyers are forced to "down-ladder" into flats, generating an inelastic localised demand.
-* **Liquidity Shocks Puncture Localised Bubbles:** Although "down-laddering" cushions flat prices in static environments, macroeconomic rate shocks aggressively eroded this dynamic over time. Between 2017 and 2024, the localised flat premium within High-HAR areas compressed from 16.2% to 7.0%. In the cumulative log-difference model, High-HAR flats suffered the worst growth deficit (-16.3%). This demonstrates that macro liquidity withdrawals disproportionately decimate highly leveraged, entry-level assets.
+- **Energy efficiency.** The cross-sectional premium for EPC A–C properties rose from 0.085 (p<0.1) in 2017 to 0.306 (p<0.01) in 2024, consistent with a repricing of energy efficiency after the energy cost shock.
+- **Energy efficiency across HAR regimes.** In the log-difference model, EPC A–C properties are associated with about 10.5% higher price growth in Low-HAR areas but about 2.2% lower growth in High-HAR areas. One interpretation is that credit-constrained buyers in High-HAR areas were less able to pay for future energy savings as rates rose. The 2024 cross-sectional interaction is not significant, so this evidence comes from the growth model.
+- **Flats.** In the cross-section, flats sell at a discount in Low-HAR areas but at a premium over houses in High-HAR areas (+16.2% in 2017, +7.0% in 2024). This is consistent with "down-laddering": buyers priced out of houses turning to flats in the same area.
+- **Flats over time.** Flats show lower price growth than houses (−6.9%), and High-HAR flats show the largest growth deficit relative to Low-HAR houses (−16.3%). Together with the shrinking High-HAR flat premium, this suggests that tighter credit weighed most on entry-level properties in high-HAR areas.
+
+---
+
+## Limitations
+
+1. **Identification.** Double selection protects inference from model-selection error, but it does not address confounding. The design relies on unconfoundedness given the selected controls, with no alternative identification strategy (such as an instrument or a difference-in-differences design) to fall back on.
+2. **Selection and specification.** Controls are selected separately within each HAR group but enter the final OLS additively, so their coefficients are restricted to be equal across groups. The interactions with `is_hhar` are not treated as separate selection targets.
+3. **Penalty choice.** Penalties are chosen by cross-validation rather than the theory-driven plug-in penalty of Belloni, Chernozhukov and Hansen (2014).
+4. **Heterogeneity.** Heterogeneity is examined along one pre-chosen dimension (High/Low HAR). Effects may vary along other dimensions that this design cannot detect; data-driven methods such as causal forests would be needed to search for them.
+5. **Data.** Median prices use all Price Paid records, including non-standard (Category B) transactions, so a few LSOAs have implausible medians (for example, below £10,000 or above £40 million in 2017). The log-difference sample requires at least five sales per year, which limits their influence; the cross-sectional samples have no such restriction. Harrow and Richmond upon Thames are missing from the 2024 and log-difference samples, which may make them less representative of higher-income outer London. Results have not been re-estimated with these issues corrected.
+6. **Treatment selection.** In the selection step, the share variables `is_flat` and `is_abc` are converted to integers, so the treatment equations select controls that predict whether an LSOA consists entirely of flats (or A–C dwellings), rather than the shares themselves. A linear LASSO on the shares would be the correct implementation.
+
+---
+
+## Data Licences
+
+Contains HM Land Registry data © Crown copyright and database right. Contains public sector information from ONS, MHCLG and TfL, licensed under the [Open Government Licence v3.0](https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/). Contains OS data © Crown copyright and database right.
+<!-- CHECK: EPC raw files include addresses, which carry separate Royal Mail / OS terms. Check the EPC site's licensing page; if redistribution is not allowed, remove rawepc_*.csv and add download instructions instead. Also check GitHub's 100 MB per-file limit for the pp-*.csv files. -->
+
+## Citation
+
+Ma, Y. (2026). *Heterogeneous Green Premiums and Flat Penalties: Evidence from London*. Independent research paper, University College London.
