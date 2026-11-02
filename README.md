@@ -11,7 +11,7 @@ This repository contains the data, code and paper for an independent research pr
 
 The project asks how the price associations of two property characteristics, energy efficiency (EPC bands A–C) and property type (flat vs. house), changed over this period, and whether these changes differ between areas with high and low Housing Affordability Ratios (HAR), used here as a proxy for credit constraints.
 
-Controls are selected from a high-dimensional set of energy, deprivation and transport-access features using post-double-selection LASSO (Belloni, Chernozhukov and Hansen, 2014), followed by OLS. The estimates are **conditional associations, not causal effects**; see [Limitations](#limitations).
+Controls are selected from a high-dimensional set of energy, deprivation and transport-access features using double-selection LASSO (Belloni, Chernozhukov and Hansen, 2014), followed by OLS. The estimates are **conditional associations, not causal effects**; see [Limitations](#limitations).
 
 ---
 
@@ -71,7 +71,7 @@ The unit of observation is the **2021 Lower Layer Super Output Area (LSOA)** in 
 
 ## Method
 
-1. **Control selection.** Post-double-selection LASSO, run separately within the High-HAR and Low-HAR subsamples. In each subsample, a LASSO regresses the outcome on the standardised candidate controls (`LassoCV`), and L1-penalised logistic regressions do the same for each variable of interest, `is_flat` and `is_abc` (`LogisticRegressionCV`). Penalties are chosen by 5-fold cross-validation. The union of controls selected in either subsample is retained. Because `is_flat` and `is_abc` are shares, they are converted to integers before the logistic step, which in practice flags LSOAs where the share equals one (see Limitations).
+1. **Control selection.** Double-selection LASSO, run separately within the High-HAR and Low-HAR subsamples. In each subsample, a LASSO regresses the outcome on the standardised candidate controls (`LassoCV`), and L1-penalised logistic regressions do the same for each variable of interest, `is_flat` and `is_abc` (`LogisticRegressionCV`). Penalties are chosen by 5-fold cross-validation. The union of controls selected in either subsample is retained. Because `is_flat` and `is_abc` are shares, they are converted to integers before the logistic step, which in practice flags LSOAs where the share equals one (see Limitations).
 2. **Estimation.** OLS on the variables of interest, their interactions with `is_hhar`, and the selected controls:
    - a **log-difference model** of 2017–2024 median price growth;
    - **cross-sectional models** for 2017 and 2024, using the same control set selected from the full-sample model so that the controls are held fixed across years.
@@ -83,7 +83,7 @@ Controls are standardised only for selection; the OLS models use the original un
 ## Replication
 
 **Requirements:** Python 3.x and the packages in `requirements.txt` (`pandas`, `numpy`, `scikit-learn`, `statsmodels`, `stargazer`, `openpyxl`, `xlrd`). A virtual environment is recommended.
-<!-- CHECK: fill in the exact Python version used. -->
+
 
 ```bash
 pip install -r requirements.txt
@@ -174,7 +174,7 @@ All findings are conditional associations; the mechanisms are interpretations co
 ## Data Licences
 
 Contains HM Land Registry data © Crown copyright and database right. Contains public sector information from ONS, MHCLG and TfL, licensed under the [Open Government Licence v3.0](https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/). Contains OS data © Crown copyright and database right.
-<!-- CHECK: EPC raw files include addresses, which carry separate Royal Mail / OS terms. Check the EPC site's licensing page; if redistribution is not allowed, remove rawepc_*.csv and add download instructions instead. Also check GitHub's 100 MB per-file limit for the pp-*.csv files. -->
+
 
 ## Citation
 
