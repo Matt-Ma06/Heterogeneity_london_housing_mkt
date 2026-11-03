@@ -1,7 +1,7 @@
 # Heterogeneous Green Premiums and Flat Penalties: Evidence from London
 
 **Author:** Yuxuan (Matt) Ma, University College London · matt.ma.24@ucl.ac.uk
-**Paper:** [`Here`](./essay.pdf)
+**Paper:** [`Green_Premiums_Flat_Penalties_London.pdf`](./paper/Green_Premiums_Flat_Penalties_London.pdf)
 
 ---
 
@@ -11,7 +11,7 @@ This repository contains the data, code and paper for an independent research pr
 
 The project asks how the price associations of two property characteristics, energy efficiency (EPC bands A–C) and property type (flat vs. house), changed over this period, and whether these changes differ between areas with high and low Housing Affordability Ratios (HAR), used here as a proxy for credit constraints.
 
-Controls are selected from a high-dimensional set of energy, deprivation and transport-access features using double-selection LASSO (Belloni, Chernozhukov and Hansen, 2014), followed by OLS. The estimates are **conditional associations, not causal effects**; see [Limitations](#limitations).
+Controls are selected from a high-dimensional set of energy, deprivation and transport-access features using double-selection LASSO (Belloni, Chernozhukov and Hansen, 2014), followed by post-LASSO OLS. The estimates are **conditional associations, not causal effects**; see [Limitations](#limitations).
 
 ---
 
@@ -30,9 +30,7 @@ Controls are selected from a high-dimensional set of energy, deprivation and tra
 │   ├── missing_ppd_17.csv, missing_ppd_24.csv
 │   ├── msoa_income_2018.xls, msoa_income_2023.xlsx
 │   ├── postcode_lookup_2602.csv
-│   ├── pp-2017-part1.csv, pp-2017-part2.csv, pp-2017.csv, pp-2024.csv
-│   ├── ptal2015.csv, ptal2023.csv
-│   └── rawepc_17.csv, rawepc_24.csv
+│   └── ptal2015.csv, ptal2023.csv
 ├── DATA_ANALYSIS/                  # Stage 2: estimation
 │   ├── data_analysis.py
 │   ├── final_london_data.csv, final_17_london_data.csv, final_24_london_data.csv
@@ -42,7 +40,9 @@ Controls are selected from a high-dimensional set of energy, deprivation and tra
 └── README.md
 ```
 
-The cleaned datasets and output tables in `DATA_ANALYSIS/` are included so that Stage 2 can be run without Stage 1. Running Stage 1 regenerates the three `final_*.csv` files in `DATA_ANALYSIS/` and overwrites them.
+The cleaned LSOA-level datasets and output tables in `DATA_ANALYSIS/` are included so that Stage 2 can be run without Stage 1. Running Stage 1 regenerates the three `final_*.csv` files in `DATA_ANALYSIS/` and overwrites them.
+
+The raw Price Paid files (`pp-*.csv`) and raw EPC files (`rawepc_*.csv`) are **not included** in this repository, because they contain address-level records (see [Data Licences](#data-licences)). To run Stage 1, download them as described in [Data access](#data-access) and place them in `RAW_DATA_AND_CLEANING/`.
 
 ---
 
@@ -58,6 +58,11 @@ The unit of observation is the **2021 Lower Layer Super Output Area (LSOA)** in 
 | Deprivation | MHCLG, *English Indices of Deprivation* (2015, 2019, 2025) | `iod*.csv` | Seven IMD domain scores, part of the candidate control set. |
 | Transport access | TfL, *GIS Open Data Hub* | `ptal*.csv` | Mean PTAL and intra-LSOA PTAI gaps, part of the candidate control set. |
 | Geography | ONS, *Open Geography Portal* | `postcode_lookup_2602.csv`, `lsoa11_21_lookup.csv` | Postcode-to-LSOA mapping and 2011-to-2021 LSOA conversion. |
+
+### Data access
+
+- **Price Paid Data:** download the 2017 and 2024 yearly files from HM Land Registry (<https://www.gov.uk/government/statistical-data-sets/price-paid-data-downloads>). Save the 2017 file as `pp-2017.csv` (or as `pp-2017-part1.csv` and `pp-2017-part2.csv` if downloaded in two parts) and the 2024 file as `pp-2024.csv`.
+- **EPC data:** register on the MHCLG Energy Performance of Buildings Data service, download domestic certificates for the London local authorities, and save the certificates lodged in 2017 and 2024 as `rawepc_17.csv` and `rawepc_24.csv`.
 
 **Samples.** Each cross-sectional model uses all LSOAs with complete data in that year (4,803 in 2017; 4,536 in 2024). The log-difference model requires complete data in both years and at least five recorded sales in each year, leaving 4,358 LSOAs (87.26% of London).
 
@@ -82,8 +87,7 @@ Controls are standardised only for selection; the OLS models use the original un
 
 ## Replication
 
-**Requirements:** Python 3.x and the packages in `requirements.txt` (`pandas`, `numpy`, `scikit-learn`, `statsmodels`, `stargazer`, `openpyxl`, `xlrd`). A virtual environment is recommended.
-
+**Requirements:** Python 3.11 and the packages in `requirements.txt` (`pandas`, `numpy`, `scikit-learn`, `statsmodels`, `stargazer`, `openpyxl`, `xlrd`). A virtual environment is recommended.
 
 ```bash
 pip install -r requirements.txt
@@ -156,7 +160,7 @@ All findings are conditional associations; the mechanisms are interpretations co
 - **Energy efficiency.** The cross-sectional premium for EPC A–C properties rose from 0.085 (p<0.1) in 2017 to 0.306 (p<0.01) in 2024, consistent with a repricing of energy efficiency after the energy cost shock.
 - **Energy efficiency across HAR regimes.** In the log-difference model, EPC A–C properties are associated with about 10.5% higher price growth in Low-HAR areas but about 2.2% lower growth in High-HAR areas. One interpretation is that credit-constrained buyers in High-HAR areas were less able to pay for future energy savings as rates rose. The 2024 cross-sectional interaction is not significant, so this evidence comes from the growth model.
 - **Flats.** In the cross-section, flats sell at a discount in Low-HAR areas but at a premium over houses in High-HAR areas (+16.2% in 2017, +7.0% in 2024). This is consistent with "down-laddering": buyers priced out of houses turning to flats in the same area.
-- **Flats over time.** Flats show lower price growth than houses (−6.9%), and High-HAR flats show the largest growth deficit relative to Low-HAR houses (−16.3%). Together with the shrinking High-HAR flat premium, this suggests that tighter credit weighed most on entry-level properties in high-HAR areas.
+- **Flats over time.** Flats show lower price growth than houses (−6.9%), and High-HAR flats show the largest growth deficit relative to Low-HAR houses (−16.3%). Most of this deficit comes from slower growth in High-HAR areas overall (`is_hhar`, −0.092***); the flat × High-HAR interaction (−0.015) is not significant, so the gap between flats and houses is not shown to be larger in High-HAR areas. Together with the shrinking High-HAR flat premium in the cross-section, this is consistent with tighter credit weighing on entry-level properties in High-HAR areas, but the growth model alone does not establish it.
 
 ---
 
@@ -173,8 +177,10 @@ All findings are conditional associations; the mechanisms are interpretations co
 
 ## Data Licences
 
-Contains HM Land Registry data © Crown copyright and database right. Contains public sector information from ONS, MHCLG and TfL, licensed under the [Open Government Licence v3.0](https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/). Contains OS data © Crown copyright and database right.
-
+- **HM Land Registry Price Paid Data.** Contains HM Land Registry data © Crown copyright and database right 2026. This data is licensed under the [Open Government Licence v3.0](https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/). The address fields in the raw files are derived from Ordnance Survey and Royal Mail data, whose use is limited to personal or non-commercial purposes; the raw files are therefore not redistributed here, and only LSOA-level medians are included.
+- **MHCLG Energy Performance of Buildings Data.** The non-address fields are available under the Open Government Licence v3.0. Address and postcode fields contain Royal Mail intellectual property and are published under a separate copyright notice, so the raw certificates are not redistributed here. Only LSOA-level shares derived from them are included.
+- **ONS geography and income data.** Source: Office for National Statistics, licensed under the Open Government Licence v3.0. Contains OS data © Crown copyright and database right. Contains Royal Mail data © Royal Mail copyright and database right.
+- **MHCLG English Indices of Deprivation and TfL PTAL data.** Contains public sector information licensed under the Open Government Licence v3.0.
 
 ## Citation
 
